@@ -4,7 +4,7 @@
 
 ## 🚀 Живая демо игра
 
-**🔗 [Играть сейчас](https://your-username.github.io/secco-tap-game/)**
+**🔗 [Играть сейчас](https://dmitrycoinsec.github.io/secco-tap-game/)**
 
 ## 🎯 Особенности
 
