@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 # Bot configuration
 BOT_TOKEN = "8211591463:AAEa_gd1EfTycbLjX3QPIgebCwuMuxCojg8"  # Your SECCO Tap Bot token
-WEB_APP_URL = "https://dmitrycoinsec.github.io/secco-tap-game/"  # GitHub Pages hosting
+# Web App URL
+WEB_APP_URL = "https://dmitrycoinsec.github.io/secco-tap-game/"
 
 class SECCOTapBot:
     def __init__(self):
