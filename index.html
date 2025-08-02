@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SECCO Clicker</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .balance {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #2962ff;
+    }
+    .click-btn {
+      background-color: #2962ff;
+      color: white;
+      padding: 20px 40px;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(41, 98, 255, 0.3);
+      transition: transform 0.1s ease-in-out;
+      font-weight: 600;
+    }
+    .click-btn:active {
+      transform: scale(0.95);
+    }
+    .stats {
+      margin-top: 30px;
+      width: 90%;
+      max-width: 500px;
+    }
+    .upgrade-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #e0e0e0;
+      background: #f8f9fa;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    .upgrade-info {
+      flex: 1;
+    }
+    .upgrade-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .upgrade-details {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .upgrade-btn {
+      background-color: #2962ff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    .upgrade-btn:hover {
+      background-color: #1976d2;
+    }
+    .upgrade-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    @media(max-width: 600px) {
+      .click-btn {
+        padding: 15px 30px;
+        font-size: 1.2rem;
+      }
+      .upgrade-row {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="balance" id="balance">0 SECCO</div>
+  <button class="click-btn" onclick="earnSECCO()">Tap to Earn SECCO</button>
+  <div class="stats" id="stats"></div>
+
+  <script>
+    // Initialize Telegram Web App
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    let balance = parseInt(localStorage.getItem('seccoBalance') || '0');
+
+    const upgrades = [
+      { name: "Stake Tokens", income: 1, level: parseInt(localStorage.getItem('upgrade0Level') || '1'), cost: parseInt(localStorage.getItem('upgrade0Cost') || '100') },
+      { name: "Refer Investor", income: 2, level: parseInt(localStorage.getItem('upgrade1Level') || '1'), cost: parseInt(localStorage.getItem('upgrade1Cost') || '250') },
+      { name: "Launch Airdrop", income: 5, level: parseInt(localStorage.getItem('upgrade2Level') || '1'), cost: parseInt(localStorage.getItem('upgrade2Cost') || '500') }
+    ];
+
+    function earnSECCO() {
+      let totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 0);
+      balance += totalIncome;
+      saveGame();
+      updateDisplay();
+      
+      // Visual feedback
+      const btn = document.querySelector('.click-btn');
+      btn.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        btn.style.transform = 'scale(1)';
+      }, 100);
+    }
+
+    function upgrade(index) {
+      const u = upgrades[index];
+      if (balance >= u.cost) {
+        balance -= u.cost;
+        u.level++;
+        u.cost = Math.floor(u.cost * 1.5);
+        saveGame();
+        updateDisplay();
+      }
+    }
+
+    function saveGame() {
+      localStorage.setItem('seccoBalance', balance.toString());
+      upgrades.forEach((u, i) => {
+        localStorage.setItem(`upgrade${i}Level`, u.level.toString());
+        localStorage.setItem(`upgrade${i}Cost`, u.cost.toString());
+      });
+    }
+
+    function updateDisplay() {
+      document.getElementById('balance').innerText = `${balance.toLocaleString()} SECCO`;
+      const statsDiv = document.getElementById('stats');
+      statsDiv.innerHTML = '';
+      
+      upgrades.forEach((u, i) => {
+        const row = document.createElement('div');
+        row.className = 'upgrade-row';
+        
+        const canAfford = balance >= u.cost;
+        
+        row.innerHTML = `
+          <div class="upgrade-info">
+            <div class="upgrade-name">${u.name}</div>
+            <div class="upgrade-details">
+              Income: +${(u.income * u.level).toLocaleString()} per tap<br>
+              Level: ${u.level}
+            </div>
+          </div>
+          <button class="upgrade-btn" onclick="upgrade(${i})" ${!canAfford ? 'disabled' : ''}>
+            Upgrade<br>${u.cost.toLocaleString()} SECCO
+          </button>
+        `;
+        statsDiv.appendChild(row);
+      });
+    }
+
+    // Initialize game
+    updateDisplay();
+  </script>
+</body>
+</html>
