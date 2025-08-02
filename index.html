@@ -423,6 +423,17 @@
         <div class="balance-label">Total Balance</div>
         <div class="balance" id="balance">0 SECCO</div>
         <div class="balance-subtitle">Investment Portfolio</div>
+        
+        <!-- Energy Bar -->
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-light);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">⚡ ENERGY</span>
+            <span style="font-size: 12px; color: var(--primary-blue); font-weight: 600;" id="energyDisplay">1000/1000</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden;">
+            <div id="energyBar" style="height: 100%; background: linear-gradient(90deg, var(--success-green), var(--primary-blue)); border-radius: 3px; transition: width 0.3s ease; width: 100%;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Tap Button -->
@@ -482,6 +493,10 @@
     let balance = parseInt(localStorage.getItem('seccoBalance') || '0');
     let totalTaps = parseInt(localStorage.getItem('seccoTotalTaps') || '0');
     let totalEarned = parseInt(localStorage.getItem('seccoTotalEarned') || '0');
+    let energy = parseInt(localStorage.getItem('seccoEnergy') || '1000');
+    let maxEnergy = parseInt(localStorage.getItem('seccoMaxEnergy') || '1000');
+    let lastEnergyUpdate = parseInt(localStorage.getItem('seccoLastEnergyUpdate') || Date.now());
+    let currentTab = 'earn';
 
     const upgrades = [
       { 
@@ -519,10 +534,17 @@
     ];
 
     function earnSECCO() {
+      // Check if we have energy
+      if (energy <= 0) {
+        showEnergyShop();
+        return;
+      }
+      
       let totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
       balance += totalIncome;
       totalTaps++;
       totalEarned += totalIncome;
+      energy--;
       
       // Visual feedback
       const btn = document.querySelector('.click-btn');
@@ -536,6 +558,62 @@
       
       saveGame();
       updateDisplay();
+    }
+
+    // Energy regeneration (1 energy per 5 seconds)
+    function updateEnergy() {
+      const now = Date.now();
+      const timeDiff = now - lastEnergyUpdate;
+      const energyToAdd = Math.floor(timeDiff / 5000); // 1 energy per 5 seconds
+      
+      if (energyToAdd > 0 && energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + energyToAdd);
+        lastEnergyUpdate = now;
+        saveGame();
+        updateDisplay();
+      }
+    }
+
+    function showEnergyShop() {
+      const energyPacks = [
+        { amount: 100, cost: 0, label: '🎁 Free Pack (Watch Ad)' },
+        { amount: 500, cost: 1000, label: '⚡ Energy Pack S' },
+        { amount: 1000, cost: 1500, label: '🔋 Energy Pack M' },
+        { amount: 2500, cost: 3000, label: '🚀 Energy Pack L' }
+      ];
+      
+      let message = '⚡ Energy Shop\n\n';
+      message += `Current Energy: ${energy}/${maxEnergy}\n\n`;
+      message += 'Available Energy Packs:\n\n';
+      
+      energyPacks.forEach((pack, i) => {
+        if (pack.cost === 0) {
+          message += `${i+1}. ${pack.label}\n   +${pack.amount} Energy (FREE)\n\n`;
+        } else {
+          message += `${i+1}. ${pack.label}\n   +${pack.amount} Energy - ${pack.cost} SECCO\n\n`;
+        }
+      });
+      
+      const choice = prompt(message + 'Enter pack number (1-4) or Cancel:');
+      
+      if (choice && choice >= 1 && choice <= 4) {
+        const pack = energyPacks[choice - 1];
+        
+        if (pack.cost === 0) {
+          // Free pack
+          energy = Math.min(maxEnergy, energy + pack.amount);
+          alert(`🎁 You got ${pack.amount} free energy!`);
+        } else if (balance >= pack.cost) {
+          balance -= pack.cost;
+          energy = Math.min(maxEnergy, energy + pack.amount);
+          alert(`⚡ Purchased ${pack.amount} energy for ${pack.cost} SECCO!`);
+        } else {
+          alert(`❌ Not enough SECCO! You need ${pack.cost} SECCO.`);
+        }
+        
+        saveGame();
+        updateDisplay();
+      }
     }
 
     function createFloatingNumber(amount, element) {
@@ -599,6 +677,9 @@
       localStorage.setItem('seccoBalance', balance.toString());
       localStorage.setItem('seccoTotalTaps', totalTaps.toString());
       localStorage.setItem('seccoTotalEarned', totalEarned.toString());
+      localStorage.setItem('seccoEnergy', energy.toString());
+      localStorage.setItem('seccoMaxEnergy', maxEnergy.toString());
+      localStorage.setItem('seccoLastEnergyUpdate', lastEnergyUpdate.toString());
       upgrades.forEach((u, i) => {
         localStorage.setItem(`upgrade${i}Level`, u.level.toString());
         localStorage.setItem(`upgrade${i}Cost`, u.cost.toString());
@@ -608,11 +689,70 @@
     function updateDisplay() {
       document.getElementById('balance').textContent = balance.toLocaleString() + ' SECCO';
       
+      // Update energy display
+      document.getElementById('energyDisplay').textContent = `${energy}/${maxEnergy}`;
+      const energyPercent = (energy / maxEnergy) * 100;
+      document.getElementById('energyBar').style.width = `${energyPercent}%`;
+      
+      // Update energy bar color based on level
+      const energyBar = document.getElementById('energyBar');
+      if (energyPercent > 50) {
+        energyBar.style.background = 'linear-gradient(90deg, var(--success-green), var(--primary-blue))';
+      } else if (energyPercent > 20) {
+        energyBar.style.background = 'linear-gradient(90deg, var(--warning-orange), var(--primary-blue))';
+      } else {
+        energyBar.style.background = 'linear-gradient(90deg, #ff4444, var(--warning-orange))';
+      }
+      
       const totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
       document.getElementById('perTapDisplay').textContent = `+${totalIncome.toLocaleString()} per tap`;
       
+      // Show current tab content
+      showTabContent(currentTab);
+    }
+
+    // Footer navigation functions
+    function showTab(tab) {
+      // Remove active class from all nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Add active class to clicked item
+      event.target.closest('.nav-item').classList.add('active');
+      
+      currentTab = tab;
+      showTabContent(tab);
+    }
+
+    function showTabContent(tab) {
       const statsDiv = document.getElementById('stats');
-      statsDiv.innerHTML = '';
+      
+      switch(tab) {
+        case 'earn':
+          showEarnTab(statsDiv);
+          break;
+        case 'upgrades':
+          showUpgradesTab(statsDiv);
+          break;
+        case 'stats':
+          showStatsTab(statsDiv);
+          break;
+        case 'friends':
+          showFriendsTab(statsDiv);
+          break;
+        case 'settings':
+          showSettingsTab(statsDiv);
+          break;
+      }
+    }
+
+    function showEarnTab(container) {
+      container.innerHTML = '';
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'section-title';
+      sectionTitle.textContent = 'Investment Actions';
+      container.parentNode.insertBefore(sectionTitle, container);
       
       upgrades.forEach((u, i) => {
         const canAfford = balance >= u.cost;
@@ -638,74 +778,241 @@
           </div>
         `;
         
-        statsDiv.appendChild(card);
+        container.appendChild(card);
       });
     }
 
-    // Footer navigation functions
-    function showTab(tab) {
-      // Remove active class from all nav items
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
+    function showUpgradesTab(container) {
+      container.innerHTML = '';
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'section-title';
+      sectionTitle.textContent = '⚡ Energy & Boosts';
+      container.parentNode.insertBefore(sectionTitle, container);
+
+      // Energy shop
+      const energyCard = document.createElement('div');
+      energyCard.className = 'upgrade-card';
+      energyCard.innerHTML = `
+        <div class="upgrade-header">
+          <div class="upgrade-info">
+            <div class="upgrade-name">⚡ Buy Energy</div>
+            <div class="upgrade-details">Purchase energy packs to continue earning</div>
+          </div>
+          <button class="upgrade-btn" onclick="showEnergyShop()">
+            <div>Buy Energy</div>
+          </button>
+        </div>
+        <div class="upgrade-stats">
+          <div class="level-badge">Current: ${energy}/${maxEnergy}</div>
+          <div class="income-value">Regenerates 1/5s</div>
+        </div>
+      `;
+      container.appendChild(energyCard);
+
+      // Max energy upgrade
+      const maxEnergyUpgradeCost = maxEnergy * 2;
+      const maxEnergyCard = document.createElement('div');
+      maxEnergyCard.className = 'upgrade-card';
+      maxEnergyCard.innerHTML = `
+        <div class="upgrade-header">
+          <div class="upgrade-info">
+            <div class="upgrade-name">🔋 Max Energy Upgrade</div>
+            <div class="upgrade-details">Increase your maximum energy capacity</div>
+          </div>
+          <button class="upgrade-btn" onclick="upgradeMaxEnergy()" ${balance < maxEnergyUpgradeCost ? 'disabled' : ''}>
+            <div>Upgrade</div>
+            <div style="font-size: 11px; margin-top: 2px;">${maxEnergyUpgradeCost.toLocaleString()} SECCO</div>
+          </button>
+        </div>
+        <div class="upgrade-stats">
+          <div class="level-badge">Max: ${maxEnergy}</div>
+          <div class="income-value">+100 capacity</div>
+        </div>
+      `;
+      container.appendChild(maxEnergyCard);
+    }
+
+    function showStatsTab(container) {
+      container.innerHTML = '';
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'section-title';
+      sectionTitle.textContent = '📊 Your Statistics';
+      container.parentNode.insertBefore(sectionTitle, container);
+
+      const totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
+      const avgPerTap = totalEarned > 0 ? Math.round(totalEarned / totalTaps) : 0;
+      const investorLevel = Math.floor(totalTaps / 100) + 1;
+
+      const stats = [
+        { icon: '💰', label: 'Total Balance', value: `${balance.toLocaleString()} SECCO` },
+        { icon: '🎯', label: 'Total Taps', value: totalTaps.toLocaleString() },
+        { icon: '📈', label: 'Total Earned', value: `${totalEarned.toLocaleString()} SECCO` },
+        { icon: '⚡', label: 'Income per Tap', value: totalIncome.toLocaleString() },
+        { icon: '📊', label: 'Average per Tap', value: avgPerTap.toLocaleString() },
+        { icon: '🏆', label: 'Investor Level', value: investorLevel.toString() },
+        { icon: '🔋', label: 'Energy Status', value: `${energy}/${maxEnergy}` }
+      ];
+
+      stats.forEach(stat => {
+        const card = document.createElement('div');
+        card.className = 'upgrade-card';
+        card.innerHTML = `
+          <div class="upgrade-header">
+            <div class="upgrade-info">
+              <div class="upgrade-name">${stat.icon} ${stat.label}</div>
+              <div class="upgrade-details">Current progress and achievements</div>
+            </div>
+            <div style="text-align: right; color: var(--primary-blue); font-weight: 600;">
+              ${stat.value}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
       });
+    }
+
+    function showFriendsTab(container) {
+      container.innerHTML = '';
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'section-title';
+      sectionTitle.textContent = '👥 Friends & Referrals';
+      container.parentNode.insertBefore(sectionTitle, container);
+
+      const referralCode = 'SECCO' + Math.floor(Math.random() * 10000);
       
-      // Add active class to clicked item
-      event.target.closest('.nav-item').classList.add('active');
-      
-      // Handle different tabs
-      switch(tab) {
-        case 'earn':
-          // Default view - already shown
-          break;
-        case 'upgrades':
-          showUpgradesInfo();
-          break;
-        case 'stats':
-          showStatsModal();
-          break;
-        case 'friends':
-          showFriendsModal();
-          break;
-        case 'settings':
-          showSettingsModal();
-          break;
+      const friendsCard = document.createElement('div');
+      friendsCard.className = 'upgrade-card';
+      friendsCard.innerHTML = `
+        <div class="upgrade-header">
+          <div class="upgrade-info">
+            <div class="upgrade-name">🎁 Invite Friends</div>
+            <div class="upgrade-details">Earn bonuses when friends join and level up</div>
+          </div>
+          <button class="upgrade-btn" onclick="shareReferral()">
+            <div>Share Link</div>
+          </button>
+        </div>
+        <div class="upgrade-stats">
+          <div class="level-badge">Code: ${referralCode}</div>
+          <div class="income-value">+500 SECCO per friend</div>
+        </div>
+      `;
+      container.appendChild(friendsCard);
+
+      const rewardsCard = document.createElement('div');
+      rewardsCard.className = 'upgrade-card';
+      rewardsCard.innerHTML = `
+        <div class="upgrade-header">
+          <div class="upgrade-info">
+            <div class="upgrade-name">🏆 Referral Rewards</div>
+            <div class="upgrade-details">
+              • Friend joins: +500 SECCO<br>
+              • Friend reaches Level 5: +2000 SECCO<br>
+              • Friend reaches Level 10: +5000 SECCO
+            </div>
+          </div>
+        </div>
+        <div class="upgrade-stats">
+          <div class="level-badge">Friends: 0</div>
+          <div class="income-value">Bonus: 0 SECCO</div>
+        </div>
+      `;
+      container.appendChild(rewardsCard);
+    }
+
+    function showSettingsTab(container) {
+      container.innerHTML = '';
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'section-title';
+      sectionTitle.textContent = '⚙️ Settings & More';
+      container.parentNode.insertBefore(sectionTitle, container);
+
+      const settings = [
+        { icon: '📱', label: 'About SECCO', action: 'showAbout()' },
+        { icon: '💼', label: 'Professional Features', action: 'showPremium()' },
+        { icon: '📞', label: 'Support & Help', action: 'showSupport()' },
+        { icon: '🔄', label: 'Reset Progress', action: 'resetProgress()', danger: true }
+      ];
+
+      settings.forEach(setting => {
+        const card = document.createElement('div');
+        card.className = 'upgrade-card';
+        card.innerHTML = `
+          <div class="upgrade-header">
+            <div class="upgrade-info">
+              <div class="upgrade-name">${setting.icon} ${setting.label}</div>
+              <div class="upgrade-details">${setting.danger ? '⚠️ This action cannot be undone' : 'Tap to access this feature'}</div>
+            </div>
+            <button class="upgrade-btn" onclick="${setting.action}" style="${setting.danger ? 'background: linear-gradient(135deg, #ff4444, #cc0000);' : ''}">
+              <div>Open</div>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function upgradeMaxEnergy() {
+      const cost = maxEnergy * 2;
+      if (balance >= cost) {
+        balance -= cost;
+        maxEnergy += 100;
+        energy = Math.min(energy + 50, maxEnergy); // Bonus energy
+        saveGame();
+        updateDisplay();
+        alert('🔋 Max Energy upgraded! +100 capacity and +50 bonus energy!');
       }
     }
 
-    function showUpgradesInfo() {
-      alert('💡 Upgrade Tips:\n\n🔒 Stake SECCO - Start here for steady income\n🎁 Launch Airdrop - Great mid-game boost\n👥 Refer Investor - High income potential\n⛏️ DeFi Mining - Ultimate income multiplier\n\nStrategy: Balance all upgrades for maximum efficiency!');
+    function shareReferral() {
+      const referralLink = `https://t.me/secco_investment_bot?start=ref_${Math.floor(Math.random() * 10000)}`;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Join SECCO Investment Platform!',
+          text: '🚀 Earn crypto by tapping! Professional investment platform.',
+          url: referralLink
+        });
+      } else {
+        navigator.clipboard.writeText(referralLink);
+        alert('📎 Referral link copied to clipboard!\n\n' + referralLink);
+      }
     }
 
-    function showStatsModal() {
-      const totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
-      const avgPerTap = totalEarned > 0 ? Math.round(totalEarned / totalTaps) : 0;
+    function showAbout() {
+      alert('📱 SECCO Investment Platform\n\nVersion: 2.0 Professional\n\n🎯 Features:\n• Tap-to-earn mechanics\n• Energy system with regeneration\n• Professional investment upgrades\n• Statistics tracking\n• Referral system\n\n💎 "BlackRock is the past — CoinSecurities begins a new era of investing!"');
+    }
+
+    function showPremium() {
+      alert('💼 Professional Features\n\n🔥 Coming Soon:\n• Premium energy packs\n• Exclusive investment strategies\n• Advanced analytics\n• Priority support\n• Special bonuses\n\nStay tuned for updates! 🚀');
+    }
+
+    function showSupport() {
+      alert('📞 Support & Help\n\n🤝 Need assistance?\n\n📧 Email: support@secco.network\n💬 Telegram: @secco_support\n🌐 Website: secco.network\n\n⏰ Support Hours: 24/7\n\nWe are here to help! 🚀');
+    }
+
+    function resetProgress() {
+      const confirm1 = confirm('⚠️ Reset Progress\n\nThis will delete ALL your data:\n• Balance: 0 SECCO\n• All upgrades reset\n• Energy reset to 1000\n• Statistics cleared\n\nAre you sure?');
       
-      alert(`📊 Your Investment Stats\n\n💰 Balance: ${balance.toLocaleString()} SECCO\n🎯 Total Taps: ${totalTaps.toLocaleString()}\n📈 Total Earned: ${totalEarned.toLocaleString()} SECCO\n⚡ Income per Tap: ${totalIncome.toLocaleString()}\n📊 Average per Tap: ${avgPerTap.toLocaleString()}\n🏆 Investor Level: ${Math.floor(totalTaps / 100) + 1}`);
-    }
-
-    function showFriendsModal() {
-      const referralCode = 'SECCO' + Math.floor(Math.random() * 10000);
-      alert(`👥 Invite Friends & Earn!\n\n🎁 Referral Rewards:\n• Friend joins: +500 SECCO\n• Friend reaches Level 5: +2000 SECCO\n• Friend reaches Level 10: +5000 SECCO\n\n📎 Your Referral Code: ${referralCode}\n\nShare SECCO Investment Platform with friends and earn together! 🚀`);
-    }
-
-    function showSettingsModal() {
-      const options = confirm('⚙️ Settings & More\n\n📱 About SECCO Investment Platform\n🔄 Reset Progress (⚠️ Warning!)\n💼 Professional Features\n📞 Support & Help\n\nReset your progress? (Cancel to keep playing)');
-      
-      if (options) {
-        const confirmReset = confirm('⚠️ Are you sure?\n\nThis will reset ALL your progress:\n• Balance: 0 SECCO\n• All upgrades reset to Level 1\n• Total taps and earnings reset\n\nThis action cannot be undone!');
+      if (confirm1) {
+        const confirm2 = confirm('🚨 FINAL WARNING\n\nThis action CANNOT be undone!\n\nType "RESET" in your mind and click OK to proceed, or Cancel to keep your progress.');
         
-        if (confirmReset) {
+        if (confirm2) {
           localStorage.clear();
+          alert('✅ Progress reset successfully!\n\nReloading game...');
           location.reload();
         }
       }
     }
 
     // Initialize game
+    updateEnergy(); // Update energy on load
     updateDisplay();
 
-    // Auto-save every 30 seconds
-    setInterval(saveGame, 30000);
+    // Auto-save and energy update every 5 seconds
+    setInterval(() => {
+      updateEnergy();
+      saveGame();
+    }, 5000);
 
     // Save on page unload
     window.addEventListener('beforeunload', saveGame);
