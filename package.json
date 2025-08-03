@@ -1,0 +1,40 @@
+{
+  "name": "secco-energy-contract",
+  "version": "1.0.0",
+  "description": "Smart contract for SECCO energy purchases on TON blockchain",
+  "main": "index.js",
+  "scripts": {
+    "build": "blueprint build",
+    "test": "blueprint test",
+    "deploy": "blueprint run deployEnergyContract",
+    "deploy:testnet": "blueprint run deployEnergyContract --testnet",
+    "compile": "func -o ./build/energy_purchase.fif ./contracts/energy_purchase.fc",
+    "start": "ts-node server/index.ts",
+    "dev": "ts-node --watch server/index.ts",
+    "monitor-wallet": "ts-node scripts/walletMonitor.ts monitor",
+    "wallet-balance": "ts-node scripts/walletMonitor.ts balance",
+    "check-tx": "ts-node scripts/walletMonitor.ts check"
+  },
+  "keywords": ["ton", "smart-contract", "blockchain", "energy", "gaming"],
+  "author": "SECCO Team",
+  "license": "MIT",
+  "dependencies": {
+    "@ton/core": "^0.56.0",
+    "@ton/crypto": "^3.2.0",
+    "@ton/ton": "^13.9.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@ton/blueprint": "^0.17.0",
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

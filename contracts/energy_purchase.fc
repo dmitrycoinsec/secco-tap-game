@@ -1,0 +1,196 @@
+;; SECCO Energy Purchase Smart Contract
+;; Обрабатывает покупки энергии за TON
+
+#include "imports/stdlib.fc";
+
+;; Storage structure:
+;; owner_address:MsgAddress - адрес владельца контракта
+;; total_ton_collected:Coins - общее количество собранных TON
+;; energy_price_25:Coins - цена за 25 энергии (0.5 TON)
+;; energy_price_50:Coins - цена за 50 энергии (1.0 TON)
+;; energy_price_100:Coins - цена за полную энергию (2.0 TON)
+
+(slice, int, int, int, int) load_data() inline {
+    var ds = get_data().begin_parse();
+    return (
+        ds~load_msg_addr(),  ;; owner_address
+        ds~load_coins(),     ;; total_ton_collected
+        ds~load_coins(),     ;; energy_price_25
+        ds~load_coins(),     ;; energy_price_50
+        ds~load_coins()      ;; energy_price_100
+    );
+}
+
+() save_data(slice owner_address, int total_ton_collected, int energy_price_25, int energy_price_50, int energy_price_100) impure inline {
+    set_data(begin_cell()
+        .store_slice(owner_address)
+        .store_coins(total_ton_collected)
+        .store_coins(energy_price_25)
+        .store_coins(energy_price_50)
+        .store_coins(energy_price_100)
+        .end_cell());
+}
+
+;; op codes
+const op::buy_energy_25 = 0x12345601;
+const op::buy_energy_50 = 0x12345602;
+const op::buy_energy_100 = 0x12345603;
+const op::withdraw = 0x12345604;
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+        return ();
+    }
+    
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    if (flags & 1) { ;; ignore all bounced messages
+        return ();
+    }
+    
+    slice sender_address = cs~load_msg_addr();
+    
+    int op = in_msg_body~load_uint(32);
+    int query_id = in_msg_body~load_uint(64);
+    
+    var (owner_address, total_ton_collected, energy_price_25, energy_price_50, energy_price_100) = load_data();
+    
+    if (op == op::buy_energy_25) {
+        ;; Покупка 25 энергии за 0.5 TON
+        throw_unless(401, msg_value >= energy_price_25);
+        
+        ;; Отправляем TON на кошелек владельца
+        var payment_msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(owner_address)
+            .store_coins(msg_value - 10000000) ;; Оставляем 0.01 TON на газ
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_ref(begin_cell()
+                .store_uint(0, 32)
+                .store_slice("Energy purchase: 25 units")
+                .end_cell())
+            .end_cell();
+        send_raw_message(payment_msg, 1);
+        
+        ;; Увеличиваем счетчик собранных TON
+        total_ton_collected += msg_value;
+        save_data(owner_address, total_ton_collected, energy_price_25, energy_price_50, energy_price_100);
+        
+        ;; Отправляем подтверждение покупки
+        var response = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(sender_address)
+            .store_coins(0)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0x13579101, 32) ;; success response op
+            .store_uint(query_id, 64)
+            .store_uint(25, 32) ;; количество купленной энергии
+            .end_cell();
+        send_raw_message(response, 64);
+        return ();
+    }
+    
+    if (op == op::buy_energy_50) {
+        ;; Покупка 50 энергии за 1.0 TON
+        throw_unless(402, msg_value >= energy_price_50);
+        
+        ;; Отправляем TON на кошелек владельца
+        var payment_msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(owner_address)
+            .store_coins(msg_value - 10000000) ;; Оставляем 0.01 TON на газ
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_ref(begin_cell()
+                .store_uint(0, 32)
+                .store_slice("Energy purchase: 50 units")
+                .end_cell())
+            .end_cell();
+        send_raw_message(payment_msg, 1);
+        
+        total_ton_collected += msg_value;
+        save_data(owner_address, total_ton_collected, energy_price_25, energy_price_50, energy_price_100);
+        
+        var response = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(sender_address)
+            .store_coins(0)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0x13579102, 32)
+            .store_uint(query_id, 64)
+            .store_uint(50, 32)
+            .end_cell();
+        send_raw_message(response, 64);
+        return ();
+    }
+    
+    if (op == op::buy_energy_100) {
+        ;; Покупка 100 энергии за 2.0 TON
+        throw_unless(403, msg_value >= energy_price_100);
+        
+        ;; Отправляем TON на кошелек владельца
+        var payment_msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(owner_address)
+            .store_coins(msg_value - 10000000) ;; Оставляем 0.01 TON на газ
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_ref(begin_cell()
+                .store_uint(0, 32)
+                .store_slice("Energy purchase: 100 units")
+                .end_cell())
+            .end_cell();
+        send_raw_message(payment_msg, 1);
+        
+        total_ton_collected += msg_value;
+        save_data(owner_address, total_ton_collected, energy_price_25, energy_price_50, energy_price_100);
+        
+        var response = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(sender_address)
+            .store_coins(0)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0x13579103, 32)
+            .store_uint(query_id, 64)
+            .store_uint(100, 32)
+            .end_cell();
+        send_raw_message(response, 64);
+        return ();
+    }
+    
+    if (op == op::withdraw) {
+        ;; Только владелец может выводить средства
+        throw_unless(404, equal_slices(sender_address, owner_address));
+        
+        int withdraw_amount = in_msg_body~load_coins();
+        throw_unless(405, withdraw_amount <= total_ton_collected);
+        
+        var msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(owner_address)
+            .store_coins(withdraw_amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+        send_raw_message(msg, 1);
+        
+        total_ton_collected -= withdraw_amount;
+        save_data(owner_address, total_ton_collected, energy_price_25, energy_price_50, energy_price_100);
+        return ();
+    }
+    
+    throw(0xffff); ;; если op code не распознан
+}
+
+;; Get методы для чтения данных контракта
+int get_total_collected() method_id {
+    var (_, total_ton_collected, _, _, _) = load_data();
+    return total_ton_collected;
+}
+
+(int, int, int) get_energy_prices() method_id {
+    var (_, _, energy_price_25, energy_price_50, energy_price_100) = load_data();
+    return (energy_price_25, energy_price_50, energy_price_100);
+}
+
+slice get_owner_address() method_id {
+    var (owner_address, _, _, _, _) = load_data();
+    return owner_address;
+}
