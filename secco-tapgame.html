@@ -48,11 +48,12 @@
             const [maxXp, setMaxXp] = React.useState(5000); // Каждый уровень требует 5000 XP
             const [timeLeft, setTimeLeft] = React.useState(43200); // 12 часов в секундах
             const [tapAnimation, setTapAnimation] = React.useState(false);
-            const [currentTab, setCurrentTab] = React.useState("TASKS");
+            const [currentTab, setCurrentTab] = React.useState("ЗАДАНИЯ");
             const [tonBalance, setTonBalance] = React.useState(0); // Баланс TON
             const [walletConnected, setWalletConnected] = React.useState(false);
             const [tonConnectUI, setTonConnectUI] = React.useState(null);
             const [walletAddress, setWalletAddress] = React.useState("");
+            const [showGreeting, setShowGreeting] = React.useState(true); // Показать приветствие
             const [referralStats, setReferralStats] = React.useState({
                 invited: 0,
                 activated: 0
@@ -62,8 +63,8 @@
             const [tasks, setTasks] = React.useState([
                 {
                     id: 1,
-                    title: "Make your first tap",
-                    description: "Tap the button to earn your first SECCO",
+                    title: "Сделайте первый тап",
+                    description: "Тапните на кнопку, чтобы заработать первые SECCO",
                     reward: 10,
                     completed: false,
                     progress: 0,
@@ -71,8 +72,8 @@
                 },
                 {
                     id: 2,
-                    title: "Earn 100 SECCO",
-                    description: "Accumulate 100 SECCO tokens",
+                    title: "Заработайте 100 SECCO",
+                    description: "Накопите 100 токенов SECCO",
                     reward: 50,
                     completed: false,
                     progress: 0,
@@ -80,8 +81,8 @@
                 },
                 {
                     id: 3,
-                    title: "Invite your first friend",
-                    description: "Share your referral link and get a friend to join",
+                    title: "Пригласите первого друга",
+                    description: "Поделитесь реферальной ссылкой и пригласите друга",
                     reward: 100,
                     completed: false,
                     progress: 0,
@@ -89,8 +90,8 @@
                 },
                 {
                     id: 4,
-                    title: "Reach Level 2",
-                    description: "Level up to unlock more features",
+                    title: "Достигните 2 уровня",
+                    description: "Повысьте уровень, чтобы разблокировать новые функции",
                     reward: 75,
                     completed: false,
                     progress: 0,
@@ -206,12 +207,12 @@
 
             const handleBuyEnergy = async (amount, cost) => {
                 if (!walletConnected) {
-                    alert("Please connect your TON wallet first!");
+                    alert("Пожалуйста, сначала подключите кошелек TON!");
                     return;
                 }
 
                 try {
-                    const confirmed = confirm(`Buy ${amount} energy for ${cost} TON?`);
+                    const confirmed = confirm(`Купить ${amount} энергии за ${cost} TON?`);
                     
                     if (confirmed && tonConnectUI) {
                         // Определяем op code для контракта
@@ -220,7 +221,7 @@
                             case 25: opCode = 0x12345601; break;
                             case 50: opCode = 0x12345602; break;
                             case 100: opCode = 0x12345603; break;
-                            default: throw new Error("Invalid energy amount");
+                            default: throw new Error("Неверное количество энергии");
                         }
 
                         // Реальная транзакция через TON Connect
@@ -260,30 +261,30 @@
                         
                         if (validation.success) {
                             setEnergy(validation.newEnergy);
-                            alert(`Successfully bought ${amount} energy!`);
+                            alert(`Успешно куплено ${amount} энергии!`);
                         } else {
-                            alert("Transaction validation failed: " + validation.error);
+                            alert("Ошибка валидации транзакции: " + validation.error);
                         }
                     } else if (confirmed) {
                         // Fallback для демонстрации
-                        alert("Processing transaction...");
+                        alert("Обработка транзакции...");
                         
                         setTimeout(() => {
                             setEnergy(prev => Math.min(100, prev + amount));
-                            alert(`Successfully bought ${amount} energy!`);
+                            alert(`Успешно куплено ${amount} энергии!`);
                         }, 2000);
                     }
                 } catch (error) {
-                    console.error("Transaction error:", error);
-                    alert("Transaction failed: " + error.message);
+                    console.error("Ошибка транзакции:", error);
+                    alert("Ошибка транзакции: " + error.message);
                 }
             };
 
             const handleInvite = () => {
                 navigator.clipboard
                     ?.writeText(inviteLink)
-                    .then(() => alert(`Referral link copied!\n${inviteLink}`))
-                    .catch(() => alert(`Your referral link:\n${inviteLink}`));
+                    .then(() => alert(`Реферальная ссылка скопирована!\n${inviteLink}`))
+                    .catch(() => alert(`Ваша реферальная ссылка:\n${inviteLink}`));
             };
 
             const handleConnectWallet = async () => {
@@ -296,18 +297,18 @@
                         setWalletConnected(true);
                         setTonBalance(10);
                         setWalletAddress("UQD_fake_address_for_demo");
-                        alert("TON Wallet connected successfully!\nYou received 10 TON for testing.");
+                        alert("Кошелек TON успешно подключен!\nВы получили 10 TON для тестирования.");
                     }
                 } catch (error) {
-                    alert("Failed to connect wallet: " + error.message);
+                    alert("Не удалось подключить кошелек: " + error.message);
                 }
             };
 
             const renderTabContent = () => {
                 switch (currentTab) {
-                    case "TASKS":
+                    case "ЗАДАНИЯ":
                         return React.createElement("div", { className: "px-6 py-4" },
-                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Tasks"),
+                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Задания"),
                             React.createElement("div", { className: "space-y-4" },
                                 tasks.map((task) =>
                                     React.createElement("div", {
@@ -343,7 +344,7 @@
                                                                 ? "bg-teal-500 text-white hover:bg-teal-600"
                                                                 : "bg-gray-300 text-gray-500"
                                                     }`
-                                                }, task.claimed ? "CLAIMED" : task.completed ? "CLAIM" : "PENDING")
+                                                }, task.claimed ? "ПОЛУЧЕНО" : task.completed ? "ПОЛУЧИТЬ" : "ОЖИДАНИЕ")
                                             )
                                         )
                                     )
@@ -351,28 +352,28 @@
                             )
                         );
 
-                    case "BOOST":
+                    case "УСИЛЕНИЕ":
                         return React.createElement("div", { className: "px-6 py-4" },
-                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Boost Energy"),
+                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Усиление энергии"),
                             React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg mb-6" },
                                 React.createElement("div", { className: "text-center mb-4" },
-                                    React.createElement("div", { className: "text-lg font-bold text-gray-800" }, "TON Balance"),
+                                    React.createElement("div", { className: "text-lg font-bold text-gray-800" }, "Баланс TON"),
                                     React.createElement("div", { className: "text-2xl font-bold text-blue-600" }, `${tonBalance.toFixed(2)} TON`),
                                     walletConnected && React.createElement("div", { className: "text-xs text-gray-500 mt-1 break-all" }, 
-                                        `Address: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
+                                        `Адрес: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
                                     )
                                 ),
                                 !walletConnected && React.createElement("button", {
                                     onClick: handleConnectWallet,
                                     className: "w-full bg-blue-500 text-white py-3 rounded-xl font-bold hover:bg-blue-600 mb-4"
-                                }, "Connect TON Wallet")
+                                }, "Подключить кошелек TON")
                             ),
                             React.createElement("div", { className: "space-y-4" },
                                 React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg" },
                                     React.createElement("div", { className: "flex justify-between items-center" },
                                         React.createElement("div", {},
-                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "+25 Energy"),
-                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Restore 25 energy points instantly")
+                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "+25 Энергии"),
+                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Мгновенно восстановить 25 единиц энергии")
                                         ),
                                         React.createElement("button", {
                                             onClick: () => handleBuyEnergy(25, 0.5),
@@ -388,8 +389,8 @@
                                 React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg" },
                                     React.createElement("div", { className: "flex justify-between items-center" },
                                         React.createElement("div", {},
-                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "+50 Energy"),
-                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Restore 50 energy points instantly")
+                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "+50 Энергии"),
+                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Мгновенно восстановить 50 единиц энергии")
                                         ),
                                         React.createElement("button", {
                                             onClick: () => handleBuyEnergy(50, 1.0),
@@ -405,8 +406,8 @@
                                 React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg" },
                                     React.createElement("div", { className: "flex justify-between items-center" },
                                         React.createElement("div", {},
-                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "Full Energy"),
-                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Restore energy to 100%")
+                                            React.createElement("h3", { className: "font-bold text-gray-800" }, "Полная энергия"),
+                                            React.createElement("p", { className: "text-sm text-gray-600" }, "Восстановить энергию до 100%")
                                         ),
                                         React.createElement("button", {
                                             onClick: () => handleBuyEnergy(100, 2.0),
@@ -422,84 +423,84 @@
                             )
                         );
 
-                    case "FRIENDS":
+                    case "ДРУЗЬЯ":
                         return React.createElement("div", { className: "px-6 py-4" },
-                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Invite Friends"),
+                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Пригласить друзей"),
                             React.createElement("div", { className: "bg-white rounded-2xl p-6 shadow-lg mb-6" },
                                 React.createElement("div", { className: "text-center mb-4" },
-                                    React.createElement("h3", { className: "text-lg font-bold text-gray-800 mb-2" }, "Referral Stats"),
+                                    React.createElement("h3", { className: "text-lg font-bold text-gray-800 mb-2" }, "Статистика рефералов"),
                                     React.createElement("div", { className: "grid grid-cols-2 gap-4" },
                                         React.createElement("div", { className: "text-center" },
                                             React.createElement("div", { className: "text-2xl font-bold text-teal-600" }, referralStats.invited),
-                                            React.createElement("div", { className: "text-sm text-gray-600" }, "Invited")
+                                            React.createElement("div", { className: "text-sm text-gray-600" }, "Приглашено")
                                         ),
                                         React.createElement("div", { className: "text-center" },
                                             React.createElement("div", { className: "text-2xl font-bold text-green-600" }, referralStats.activated),
-                                            React.createElement("div", { className: "text-sm text-gray-600" }, "Started Playing")
+                                            React.createElement("div", { className: "text-sm text-gray-600" }, "Начали играть")
                                         )
                                     )
                                 )
                             ),
                             React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg mb-4" },
-                                React.createElement("h3", { className: "font-bold text-gray-800 mb-2" }, "Your Referral Link"),
+                                React.createElement("h3", { className: "font-bold text-gray-800 mb-2" }, "Ваша реферальная ссылка"),
                                 React.createElement("div", { className: "bg-gray-100 p-3 rounded-lg mb-3 text-sm break-all" }, inviteLink),
                                 React.createElement("button", {
                                     onClick: handleInvite,
                                     className: "w-full bg-teal-500 text-white py-3 rounded-xl font-bold hover:bg-teal-600"
-                                }, "📋 Copy Referral Link")
+                                }, "📋 Скопировать реферальную ссылку")
                             ),
                             React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg" },
-                                React.createElement("h3", { className: "font-bold text-gray-800 mb-2" }, "Referral Rewards"),
+                                React.createElement("h3", { className: "font-bold text-gray-800 mb-2" }, "Награды за рефералов"),
                                 React.createElement("ul", { className: "space-y-2 text-sm text-gray-600" },
-                                    React.createElement("li", {}, "• Invite a friend: +100 SECCO"),
-                                    React.createElement("li", {}, "• Friend reaches Level 2: +50 SECCO"),
-                                    React.createElement("li", {}, "• Friend earns 1000 SECCO: +200 SECCO")
+                                    React.createElement("li", {}, "• Пригласите друга: +100 SECCO"),
+                                    React.createElement("li", {}, "• Друг достигает 2 уровня: +50 SECCO"),
+                                    React.createElement("li", {}, "• Друг зарабатывает 1000 SECCO: +200 SECCO")
                                 )
                             )
                         );
 
-                    case "AIRDROP":
+                    case "АИРДРОП":
                         return React.createElement("div", { className: "px-6 py-4" },
-                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Airdrop"),
+                            React.createElement("h2", { className: "text-2xl font-bold text-gray-800 mb-6" }, "Аирдроп"),
                             React.createElement("div", { className: "bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 shadow-lg mb-6 text-white" },
                                 React.createElement("div", { className: "text-center" },
-                                    React.createElement("h3", { className: "text-xl font-bold mb-2" }, "🎁 SECCO Airdrop"),
-                                    React.createElement("p", { className: "text-sm opacity-90 mb-4" }, "Connect your TON wallet to participate in the upcoming SECCO token airdrop!")
+                                    React.createElement("h3", { className: "text-xl font-bold mb-2" }, "🎁 Аирдроп SECCO"),
+                                    React.createElement("p", { className: "text-sm opacity-90 mb-4" }, "Подключите ваш кошелек TON для участия в предстоящем аирдропе токенов SECCO!")
                                 )
                             ),
                             React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg mb-4" },
-                                React.createElement("h3", { className: "font-bold text-gray-800 mb-3" }, "Wallet Connection"),
+                                React.createElement("h3", { className: "font-bold text-gray-800 mb-3" }, "Подключение кошелька"),
                                 walletConnected 
                                     ? React.createElement("div", { className: "text-center" },
-                                        React.createElement("div", { className: "text-green-600 font-bold mb-2" }, "✅ TON Wallet Connected"),
-                                        React.createElement("div", { className: "text-sm text-gray-600" }, "You're eligible for the airdrop!")
+                                        React.createElement("div", { className: "text-green-600 font-bold mb-2" }, "✅ Кошелек TON подключен"),
+                                        React.createElement("div", { className: "text-sm text-gray-600" }, "Вы имеете право на аирдроп!")
                                     )
                                     : React.createElement("div", {},
-                                        React.createElement("p", { className: "text-sm text-gray-600 mb-3" }, "Connect your TON wallet to become eligible for the SECCO airdrop"),
+                                        React.createElement("p", { className: "text-sm text-gray-600 mb-3" }, "Подключите ваш кошелек TON, чтобы стать участником аирдропа SECCO"),
                                         React.createElement("button", {
                                             onClick: handleConnectWallet,
                                             className: "w-full bg-blue-500 text-white py-3 rounded-xl font-bold hover:bg-blue-600"
-                                        }, "🔗 Connect TON Wallet")
+                                        }, "🔗 Подключить кошелек TON")
                                     )
                             ),
                             React.createElement("div", { className: "bg-white rounded-2xl p-4 shadow-lg" },
-                                React.createElement("h3", { className: "font-bold text-gray-800 mb-3" }, "Airdrop Information"),
+                                React.createElement("h3", { className: "font-bold text-gray-800 mb-3" }, "Информация об аирдропе"),
                                 React.createElement("div", { className: "space-y-3 text-sm" },
                                     React.createElement("div", { className: "flex justify-between" },
-                                        React.createElement("span", { className: "text-gray-600" }, "Total Airdrop Pool:"),
+                                        React.createElement("span", { className: "text-gray-600" }, "Общий пул аирдропа:"),
                                         React.createElement("span", { className: "font-bold" }, "10,000,000 SECCO")
                                     ),
                                     React.createElement("div", { className: "flex justify-between" },
-                                        React.createElement("span", { className: "text-gray-600" }, "Your Current Balance:"),
+                                        React.createElement("span", { className: "text-gray-600" }, "Ваш текущий баланс:"),
                                         React.createElement("span", { className: "font-bold text-teal-600" }, `${balance.toLocaleString()} SECCO`)
                                     ),
                                     React.createElement("div", { className: "flex justify-between" },
-                                        React.createElement("span", { className: "text-gray-600" }, "Airdrop Date:"),
-                                        React.createElement("span", { className: "font-bold" }, "TBA")
+                                        React.createElement("span", { className: "text-gray-600" }, "Дата аирдропа:"),
+                                        React.createElement("span", { className: "font-bold" }, "Будет объявлена")
                                     ),
                                     React.createElement("hr", { className: "my-3" }),
                                     React.createElement("p", { className: "text-xs text-gray-500" }, 
-                                        "The airdrop allocation will be based on your in-game activity, referrals, and SECCO balance at the time of the snapshot."
+                                        "Распределение аирдропа будет основано на вашей игровой активности, рефералах и балансе SECCO на момент снапшота."
                                     )
                                 )
                             )
@@ -522,6 +523,25 @@
                         overflow: "hidden",
                     }}
                 >
+                    {/* Greeting Modal */}
+                    {showGreeting && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-3xl p-8 mx-6 text-center shadow-2xl">
+                                <div className="text-6xl mb-4">👋</div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-3">Привет!</h2>
+                                <p className="text-gray-600 mb-6 leading-relaxed">
+                                    Добро пожаловать в SECCO Tap Game!<br/>
+                                    Тапайте, зарабатывайте и побеждайте вместе с нами.
+                                </p>
+                                <button
+                                    onClick={() => setShowGreeting(false)}
+                                    className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-600 hover:to-teal-600 transition-all duration-200"
+                                >
+                                    Начать игру 🎮
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     {/* Top Section */}
                     <div className="flex justify-between items-center p-6 pt-16">
                         <div className="flex items-center space-x-3">
@@ -538,7 +558,7 @@
                                 <span className="text-white text-sm font-bold">{level}</span>
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-gray-800">Level {level}</div>
+                                <div className="text-sm font-bold text-gray-800">Уровень {level}</div>
                                 <div className="text-xs text-gray-500">
                                     {xp.toLocaleString()} / {maxXp.toLocaleString()}
                                 </div>
@@ -584,7 +604,7 @@
 
                         <div className="ml-8">
                             <div className="text-right mb-2">
-                                <div className="text-lg font-bold text-gray-800">ENERGY</div>
+                                <div className="text-lg font-bold text-gray-800">ЭНЕРГИЯ</div>
                                 <div className="text-2xl font-bold text-gray-800">
                                     {energy} / 100
                                 </div>
@@ -596,7 +616,7 @@
                                 ></div>
                             </div>
                             <div className="text-sm text-gray-600 text-right">
-                                Refill: {formatTime(timeLeft)}
+                                Восстановление: {formatTime(timeLeft)}
                             </div>
                         </div>
                     </div>
@@ -613,10 +633,10 @@
                     <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl px-4 py-3 shadow-2xl">
                         <div className="flex justify-around items-center">
                             {[
-                                { icon: "✅", label: "TASKS" },
-                                { icon: "🚀", label: "BOOST" },
-                                { icon: "👥", label: "FRIENDS" },
-                                { icon: "🎁", label: "AIRDROP" },
+                                { icon: "✅", label: "ЗАДАНИЯ" },
+                                { icon: "🚀", label: "УСИЛЕНИЕ" },
+                                { icon: "👥", label: "ДРУЗЬЯ" },
+                                { icon: "🎁", label: "АИРДРОП" },
                             ].map((tab, index) => (
                                 React.createElement("button", {
                                     key: index,
