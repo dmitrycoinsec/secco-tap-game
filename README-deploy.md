@@ -389,25 +389,3 @@ Track these KPIs post-deployment:
 ---
 
 *Last updated: August 2025*
-
-## 🏗 Развертывание
-
-### GitHub Pages (рекомендуется)
-1. Создайте репозиторий на GitHub
-2. Загрузите файлы игры
-3. Включите GitHub Pages в настройках
-4. Обновите URL в `bot.py`
-
-### Netlify
-1. Перетащите папку с игрой на netlify.com
-2. Получите URL
-3. Обновите URL в `bot.py`
-
-## 📞 Поддержка
-
-- Bot: [@secco_tap_bot](https://t.me/secco_tap_bot)
-- Community: [@secco_community](https://t.me/secco_community)
-
----
-
-**BlackRock is the past — CoinSecurities begins a new era of investing!** 🚀
