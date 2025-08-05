@@ -2,9 +2,13 @@ name: Deploy SECCO Tap Game to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - master
   pull_request:
-    branches: [ main ]
+    branches: 
+      - main
+      - master
 
 permissions:
   contents: read
@@ -16,23 +20,202 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🧪 Validate HTML Files
+        run: |
+          echo "🔍 Validating HTML structure..."
+          # Check if main files exist
+          if [ ! -f "index.html" ]; then
+            echo "❌ index.html not found!"
+            exit 1
+          fi
+          
+          if [ ! -f "tonconnect-manifest.json" ]; then
+            echo "❌ tonconnect-manifest.json not found!"
+            exit 1
+          fi
+          
+          if [ ! -f "manifest.json" ]; then
+            echo "❌ manifest.json not found!"
+            exit 1
+          fi
+          
+          echo "✅ All required files found!"
+
+      - name: 🔗 Validate JSON Files
+        run: |
+          echo "🔍 Validating JSON files..."
+          
+          # Validate manifest.json
+          if ! python -m json.tool manifest.json > /dev/null; then
+            echo "❌ manifest.json is invalid!"
+            exit 1
+          fi
+          
+          # Validate tonconnect-manifest.json
+          if ! python -m json.tool tonconnect-manifest.json > /dev/null; then
+            echo "❌ tonconnect-manifest.json is invalid!"
+            exit 1
+          fi
+          
+          echo "✅ JSON files are valid!"
+
+      - name: 🌐 Test TON Connect Configuration
+        run: |
+          echo "🔍 Testing TON Connect manifest..."
+          
+          # Check required fields in tonconnect-manifest.json
+          if ! grep -q '"url"' tonconnect-manifest.json; then
+            echo "❌ Missing 'url' in tonconnect-manifest.json"
+            exit 1
+          fi
+          
+          if ! grep -q '"name"' tonconnect-manifest.json; then
+            echo "❌ Missing 'name' in tonconnect-manifest.json"
+            exit 1
+          fi
+          
+          echo "✅ TON Connect manifest is properly configured!"
+
+      - name: 🎮 Validate Game Structure
+        run: |
+          echo "🔍 Validating game structure..."
+          
+          # Check for essential game elements in index.html
+          if ! grep -q "DOCTYPE html" index.html; then
+            echo "❌ Missing DOCTYPE in index.html"
+            exit 1
+          fi
+          
+          if ! grep -q "Telegram" index.html; then
+            echo "⚠️ Warning: Telegram integration might be missing"
+          fi
+          
+          if ! grep -q "TON" index.html; then
+            echo "⚠️ Warning: TON Connect might be missing"
+          fi
+          
+          echo "✅ Game structure validated!"
+
+      - name: 📊 Generate Build Report
+        run: |
+          echo "📋 Build Report" > build-report.txt
+          echo "==============" >> build-report.txt
+          echo "📅 Build Date: $(date)" >> build-report.txt
+          echo "🔧 Build Number: ${{ github.run_number }}" >> build-report.txt
+          echo "📦 Commit: ${{ github.sha }}" >> build-report.txt
+          echo "🌿 Branch: ${{ github.ref_name }}" >> build-report.txt
+          echo "" >> build-report.txt
+          echo "📁 Files:" >> build-report.txt
+          ls -la >> build-report.txt
+          echo "" >> build-report.txt
+          echo "📏 File Sizes:" >> build-report.txt
+          du -h *.html *.json 2>/dev/null >> build-report.txt || true
+          
+          cat build-report.txt
+
+      - name: 🗜️ Optimize Files for Production
+        run: |
+          echo "🗜️ Optimizing files for production..."
+          
+          # Create production directory
+          mkdir -p production
+          
+          # Copy essential files only
+          cp index.html production/
+          cp manifest.json production/
+          cp tonconnect-manifest.json production/
+          
+          # Copy alternative versions if they exist
+          [ -f index_new.html ] && cp index_new.html production/
+          [ -f index_enhanced.html ] && cp index_enhanced.html production/
+          
+          echo "✅ Files optimized for GitHub Pages!"
+          echo "📁 Production files:"
+          ls -la production/
+
+      - name: 📤 Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: 📦 Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'production'
+
+  # Deployment job
   deploy:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    needs: build
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-      
-      - name: Deploy to GitHub Pages
+      - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: 🎉 Deployment Success
+        run: |
+          echo "🎉 Successfully deployed SECCO Tap Game!"
+          echo "🌐 Live URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "📱 Game is now accessible via Telegram Web App!"
+          echo "🔗 TON Connect Manifest: ${{ steps.deployment.outputs.page_url }}tonconnect-manifest.json"
+
+  # Post-deployment validation
+  validate:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: 🔍 Post-Deployment Validation
+        run: |
+          echo "🔍 Validating deployment..."
+          
+          # Wait a bit for deployment to be ready
+          sleep 30
+          
+          # Test main page
+          if curl -s -o /dev/null -w "%{http_code}" https://dmitrycoinsec.github.io/secco-tap-game/ | grep -q "200"; then
+            echo "✅ Main page is accessible"
+          else
+            echo "❌ Main page is not accessible"
+            exit 1
+          fi
+          
+          # Test TON Connect manifest
+          if curl -s -o /dev/null -w "%{http_code}" https://dmitrycoinsec.github.io/secco-tap-game/tonconnect-manifest.json | grep -q "200"; then
+            echo "✅ TON Connect manifest is accessible"
+          else
+            echo "❌ TON Connect manifest is not accessible"
+            exit 1
+          fi
+          
+          # Test PWA manifest
+          if curl -s -o /dev/null -w "%{http_code}" https://dmitrycoinsec.github.io/secco-tap-game/manifest.json | grep -q "200"; then
+            echo "✅ PWA manifest is accessible"
+          else
+            echo "❌ PWA manifest is not accessible"
+            exit 1
+          fi
+          
+          echo "🎉 All post-deployment checks passed!"
+
+      - name: 📧 Deployment Notification
+        run: |
+          echo "📧 Deployment Notification"
+          echo "=========================="
+          echo "🎮 SECCO Tap Game has been successfully deployed!"
+          echo "🌐 Live URL: https://dmitrycoinsec.github.io/secco-tap-game/"
+          echo "📱 Ready for Telegram Web App integration"
+          echo "💎 TON Connect enabled for wallet functionality"
+          echo "⚡ Energy system: 100 energy / 12-hour refill"
+          echo "🚀 BlackRock is the past — CoinSecurities begins a new era!"

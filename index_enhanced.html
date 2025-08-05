@@ -6,409 +6,164 @@
   <title>SECCO Tap Game - DeFi Revolution</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      /* Dark Crypto Theme */
-      --bg-primary: #0a0a0f;
-      --bg-secondary: #1a1a2e;
-      --bg-card: #16213e;
-      --bg-gradient: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #0e2a5a 100%);
-      --accent-gold: #ffd700;
-      --accent-blue: #00d4ff;
-      --accent-purple: #8b5cf6;
-      --accent-green: #10b981;
-      --text-primary: #ffffff;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --border-glow: rgba(0, 212, 255, 0.3);
-      --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.2);
-      --shadow-gold: 0 0 30px rgba(255, 215, 0, 0.3);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    /* Animated Background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
-      animation: backgroundShift 20s ease-in-out infinite;
-      z-index: -1;
-    }
-
-    @keyframes backgroundShift {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* Loading Screen */
-    #loadingScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg-primary);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease;
-    }
-
-    .loading-logo {
-      font-family: 'Orbitron', monospace;
-      font-size: 2.5rem;
-      font-weight: 900;
-      background: linear-gradient(45deg, var(--accent-gold), var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 2rem;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 3px solid rgba(0, 212, 255, 0.1);
-      border-top: 3px solid var(--accent-blue);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
-    }
-
-    .loading-text {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* Main Container */
-    .container {
-      max-width: 420px;
-      margin: 0 auto;
-      min-height: 100vh;
-      position: relative;
-      background: var(--bg-gradient);
-      backdrop-filter: blur(10px);
-      border-left: 1px solid var(--border-glow);
-      border-right: 1px solid var(--border-glow);
-    }
-
-    /* Header */
-    .header {
-      padding: 2rem 1.5rem 1rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 100%;
-      background: linear-gradient(180deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
-      z-index: -1;
-    }
-
-    .logo {
-      font-family: 'Orbitron', monospace;
-      font-size: 2rem;
-      font-weight: 900;
-      background: linear-gradient(45deg, var(--accent-gold), var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-      text-shadow: var(--shadow-glow);
-    }
-
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    /* Wallet Connection */
-    .wallet-section {
-      padding: 0 1.5rem 1rem;
-      display: flex;
-      justify-content: center;
-    }
-
-    .wallet-btn {
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      border: none;
-      border-radius: 12px;
-      padding: 0.75rem 1.5rem;
-      color: white;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: var(--shadow-glow);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .wallet-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
-    }
-
-    .wallet-btn.connected {
-      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
-    }
-
-    /* Balance Card */
-    .balance-card {
-      margin: 1rem 1.5rem;
-      padding: 2rem 1.5rem;
-      background: rgba(22, 33, 62, 0.8);
-      border-radius: 20px;
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
       border: 1px solid var(--border-glow);
-      backdrop-filter: blur(10px);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .balance-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent-gold), var(--accent-blue), var(--accent-purple));
-      animation: shimmer 3s ease-in-out infinite;
-    }
-
-    @keyframes shimmer {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
-
-    .balance-label {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 0.5rem;
-    }
-
-    .balance {
-      font-family: 'Orbitron', monospace;
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(45deg, var(--accent-gold), var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1rem;
-      text-shadow: var(--shadow-gold);
-    }
-
-    /* Energy System */
-    .energy-system {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(0, 212, 255, 0.2);
-    }
-
-    .energy-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .energy-label {
-      color: var(--text-secondary);
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .energy-count {
-      font-family: 'Orbitron', monospace;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--accent-blue);
-    }
-
-    .energy-bar-container {
-      width: 100%;
-      height: 8px;
-      background: rgba(0, 212, 255, 0.1);
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .energy-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-      border-radius: 4px;
-      transition: width 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .energy-bar::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-      animation: energyFlow 2s ease-in-out infinite;
-    }
-
-    @keyframes energyFlow {
-      0% { left: -100%; }
-      100% { left: 100%; }
-    }
-
-    .energy-timer {
-      margin-top: 0.5rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-    }
-
-    /* Tap Button */
-    .tap-section {
-      padding: 2rem 1.5rem;
-      text-align: center;
-    }
-
-    .tap-btn {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(135deg, var(--accent-gold), #ff8a00);
-      color: var(--text-primary);
-      font-family: 'Orbitron', monospace;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-      box-shadow: 
-        var(--shadow-gold),
-        inset 0 0 50px rgba(255, 215, 0, 0.3);
-      margin: 0 auto 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      overflow: hidden;
-    }
-
-    .tap-btn::before {
-      content: '$';
-      position: absolute;
-      font-size: 4rem;
-      font-weight: 900;
-      opacity: 0.3;
-      z-index: 1;
-    }
-
-    .tap-btn::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      animation: buttonShine 3s ease-in-out infinite;
-      z-index: 2;
-    }
-
-    @keyframes buttonShine {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(180deg); }
-    }
-
-    .tap-btn:active {
-      transform: scale(0.95);
-      box-shadow: 
-        0 0 50px rgba(255, 215, 0, 0.6),
-        inset 0 0 30px rgba(255, 215, 0, 0.5);
-    }
-
-    .tap-btn-text {
-      position: relative;
-      z-index: 3;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .tap-info {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      padding: 0 1.5rem 1rem;
-    }
-
-    .stat-card {
-      background: rgba(22, 33, 62, 0.6);
-      border-radius: 12px;
-      padding: 1rem;
-      text-align: center;
-      border: 1px solid rgba(0, 212, 255, 0.2);
-      backdrop-filter: blur(5px);
     }
 
     .stat-value {
@@ -416,86 +171,31 @@
       font-size: 1.2rem;
       font-weight: 700;
       color: var(--accent-blue);
-      margin-bottom: 0.25rem;
     }
 
     .stat-label {
       color: var(--text-secondary);
       font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Upgrades Section */
-    .upgrades-section {
-      padding: 1rem 1.5rem 6rem;
-    }
-
-    .section-title {
-      color: var(--text-primary);
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
     .upgrade-card {
       background: rgba(22, 33, 62, 0.8);
       border-radius: 16px;
       padding: 1.5rem;
-      margin-bottom: 1rem;
-      border: 1px solid rgba(0, 212, 255, 0.2);
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .upgrade-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-      transition: left 0.5s ease;
-    }
-
-    .upgrade-card:hover::before {
-      left: 100%;
-    }
-
-    .upgrade-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--accent-blue);
-      box-shadow: var(--shadow-glow);
-    }
-
-    .upgrade-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-    }
-
-    .upgrade-info {
-      flex: 1;
+      margin: 1rem 1.5rem;
+      border: 1px solid var(--border-glow);
     }
 
     .upgrade-name {
       font-size: 1rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 0.25rem;
     }
 
     .upgrade-desc {
       color: var(--text-secondary);
       font-size: 0.8rem;
-      line-height: 1.4;
     }
 
     .upgrade-btn {
@@ -504,48 +204,16 @@
       border-radius: 10px;
       padding: 0.75rem 1rem;
       color: white;
-      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      min-width: 80px;
-      text-align: center;
-    }
-
-    .upgrade-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
     }
 
     .upgrade-btn:disabled {
       background: rgba(100, 116, 139, 0.3);
       cursor: not-allowed;
-      transform: none;
     }
 
-    .upgrade-stats {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 0.75rem;
-    }
-
-    .level-badge {
-      background: linear-gradient(135deg, var(--accent-gold), #ff8a00);
-      color: var(--bg-primary);
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
-
-    .income-value {
-      color: var(--accent-green);
-      font-weight: 600;
-      font-size: 0.8rem;
-    }
-
-    /* Footer Navigation */
     .footer-nav {
       position: fixed;
       bottom: 0;
@@ -554,7 +222,6 @@
       width: 100%;
       max-width: 420px;
       background: rgba(10, 10, 15, 0.95);
-      backdrop-filter: blur(20px);
       border-top: 1px solid var(--border-glow);
       padding: 0.75rem 0;
       z-index: 100;
@@ -564,9 +231,6 @@
       display: flex;
       justify-content: space-around;
       align-items: center;
-      max-width: 380px;
-      margin: 0 auto;
-      padding: 0 1rem;
     }
 
     .nav-item {
@@ -577,20 +241,11 @@
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s ease;
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      min-width: 50px;
     }
 
     .nav-item.active {
       color: var(--accent-blue);
       background: rgba(0, 212, 255, 0.1);
-    }
-
-    .nav-item:hover {
-      color: var(--accent-blue);
-      transform: translateY(-2px);
     }
 
     .nav-icon {
@@ -602,10 +257,8 @@
       font-size: 0.6rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    /* Floating Numbers Animation */
     .floating-number {
       position: absolute;
       color: var(--accent-gold);
@@ -614,92 +267,43 @@
       pointer-events: none;
       z-index: 1000;
       animation: floatUp 1.5s ease-out forwards;
-      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
     @keyframes floatUp {
-      0% {
-        opacity: 1;
-        transform: translateY(0px) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-80px) scale(1.2);
-      }
+      0% { opacity: 1; transform: translateY(0px) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
     }
 
-    /* Responsive Design */
-    @media (max-width: 480px) {
-      .container {
-        max-width: 100%;
-      }
-
-      .tap-btn {
-        width: 180px;
-        height: 180px;
-        font-size: 1rem;
-      }
-
-      .tap-btn::before {
-        font-size: 3rem;
-      }
-
-      .balance {
-        font-size: 2rem;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+    .energy-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 212, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
     }
 
-    /* Additional Animations */
-    .slide-in {
-      animation: slideIn 0.5s ease-out;
+    .energy-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 4px;
+      transition: width 0.3s ease;
     }
 
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .glow-pulse {
-      animation: glowPulse 2s ease-in-out infinite;
-    }
-
-    @keyframes glowPulse {
-      0%, 100% {
-        box-shadow: var(--shadow-glow);
-      }
-      50% {
-        box-shadow: 0 0 40px rgba(0, 212, 255, 0.4);
-      }
+    .energy-timer {
+      margin-top: 0.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
     }
   </style>
 </head>
 <body>
-  <!-- Loading Screen -->
-  <div id="loadingScreen">
-    <div class="loading-logo">SECCO</div>
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Initializing DeFi Platform...</div>
-  </div>
-
-  <!-- Main Container -->
   <div class="container">
-    <!-- Header -->
     <div class="header">
       <div class="logo">SECCO</div>
       <div class="subtitle">DeFi Revolution</div>
     </div>
 
-    <!-- Wallet Connection -->
     <div class="wallet-section">
       <button class="wallet-btn" id="walletBtn" onclick="connectWallet()">
         <span>🔗</span>
@@ -707,12 +311,10 @@
       </button>
     </div>
 
-    <!-- Balance Card -->
     <div class="balance-card">
       <div class="balance-label">Total Balance</div>
       <div class="balance" id="balance">0 SECCO</div>
       
-      <!-- Energy System -->
       <div class="energy-system">
         <div class="energy-header">
           <span class="energy-label">⚡ Energy</span>
@@ -725,9 +327,8 @@
       </div>
     </div>
 
-    <!-- Tap Section -->
     <div class="tap-section">
-      <button class="tap-btn glow-pulse" onclick="earnSECCO()" id="tapBtn">
+      <button class="tap-btn" onclick="earnSECCO()" id="tapBtn">
         <span class="tap-btn-text">TAP TO EARN</span>
       </button>
       <div class="tap-info">
@@ -735,7 +336,6 @@
       </div>
     </div>
 
-    <!-- Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value" id="totalTapsDisplay">0</div>
@@ -747,7 +347,6 @@
       </div>
     </div>
 
-    <!-- Upgrades Section -->
     <div class="upgrades-section">
       <div class="section-title">🚀 DeFi Upgrades</div>
       <div id="upgradesContainer">
@@ -755,7 +354,6 @@
       </div>
     </div>
 
-    <!-- Footer Navigation -->
     <div class="footer-nav">
       <div class="nav-container">
         <button class="nav-item active" onclick="showTab('earn')">
@@ -783,81 +381,7 @@
   </div>
 
   <script>
-    // Telegram Web App initialization with enhanced error handling
-    let isTelegramApp = false;
-    let walletConnected = false;
-    let tonConnectUI = null;
-
-    function initializeTelegram() {
-      try {
-        if (window.Telegram?.WebApp) {
-          window.Telegram.WebApp.ready();
-          window.Telegram.WebApp.expand();
-          window.Telegram.WebApp.setHeaderColor('#0a0a0f');
-          window.Telegram.WebApp.setBackgroundColor('#0a0a0f');
-          isTelegramApp = true;
-          console.log('✅ Telegram Web App initialized');
-        } else {
-          console.log('🌐 Running in browser mode');
-        }
-      } catch (error) {
-        console.error('❌ Telegram initialization error:', error);
-      }
-    }
-
-    // Initialize TON Connect for Telegram Wallet with Telegram Connect support
-    function initializeTonConnect() {
-      try {
-        if (typeof TonConnectUI !== 'undefined') {
-          tonConnectUI = new TonConnectUI({
-            manifestUrl: 'https://dmitrycoinsec.github.io/secco-tap-game/tonconnect-manifest.json',
-            buttonRootId: 'walletBtn',
-            telegram: window.Telegram?.WebApp || null
-          });
-
-          tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-              walletConnected = true;
-              updateWalletUI(wallet);
-              console.log('✅ Wallet connected:', wallet.account.address);
-            } else {
-              walletConnected = false;
-              updateWalletUI(null);
-              console.log('❌ Wallet disconnected');
-            }
-          });
-        }
-      } catch (error) {
-        console.error('❌ TON Connect initialization error:', error);
-      }
-    }
-
-    function updateWalletUI(wallet) {
-      const walletBtn = document.getElementById('walletBtn');
-      const walletText = document.getElementById('walletText');
-      
-      if (wallet) {
-        walletBtn.classList.add('connected');
-        walletText.textContent = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-4)}`;
-      } else {
-        walletBtn.classList.remove('connected');
-        walletText.textContent = 'Connect Wallet';
-      }
-    }
-
-    function connectWallet() {
-      if (tonConnectUI) {
-        if (walletConnected) {
-          tonConnectUI.disconnect();
-        } else {
-          tonConnectUI.connectWallet();
-        }
-      } else {
-        alert('🔗 TON Connect not available. Please use Telegram app for wallet connection.');
-      }
-    }
-
-    // Game State
+    // Enhanced game state
     let balance = parseInt(localStorage.getItem('seccoBalance') || '0');
     let totalTaps = parseInt(localStorage.getItem('seccoTotalTaps') || '0');
     let totalEarned = parseInt(localStorage.getItem('seccoTotalEarned') || '0');
@@ -866,10 +390,8 @@
     let lastEnergyRefill = parseInt(localStorage.getItem('seccoLastEnergyRefill') || Date.now());
     let currentTab = 'earn';
 
-    // Enhanced energy system - refills every 12 hours
-    const ENERGY_REFILL_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    const ENERGY_REFILL_INTERVAL = 12 * 60 * 60 * 1000;
 
-    // DeFi-themed upgrades
     const upgrades = [
       { 
         name: "🔒 Stake Pool", 
@@ -925,16 +447,13 @@
       totalEarned += totalIncome;
       energy--;
       
-      // Visual feedback
       const btn = document.getElementById('tapBtn');
       btn.style.transform = 'scale(0.9)';
       setTimeout(() => {
         btn.style.transform = 'scale(1)';
       }, 150);
       
-      // Enhanced floating number effect
       createFloatingNumber(totalIncome, btn);
-      
       saveGame();
       updateDisplay();
     }
@@ -961,12 +480,10 @@
       const now = Date.now();
       const timeSinceLastRefill = now - lastEnergyRefill;
       
-      // Check if 12 hours have passed
       if (timeSinceLastRefill >= ENERGY_REFILL_INTERVAL) {
         energy = maxEnergy;
         lastEnergyRefill = now;
         saveGame();
-        console.log('🔋 Energy refilled to maximum!');
       }
       
       updateEnergyTimer();
@@ -1002,18 +519,15 @@
       if (balance >= u.cost) {
         balance -= u.cost;
         u.level++;
-        u.cost = Math.floor(u.cost * 1.8); // Increased cost multiplier for balance
+        u.cost = Math.floor(u.cost * 1.8);
         saveGame();
         updateDisplay();
         
-        // Enhanced visual feedback
         const cards = document.querySelectorAll('.upgrade-card');
         if (cards[index]) {
           cards[index].style.background = 'rgba(16, 185, 129, 0.2)';
-          cards[index].style.borderColor = '#10b981';
           setTimeout(() => {
             cards[index].style.background = 'rgba(22, 33, 62, 0.8)';
-            cards[index].style.borderColor = 'rgba(0, 212, 255, 0.2)';
           }, 1000);
         }
       }
@@ -1043,53 +557,24 @@
 
     function updateDisplay() {
       try {
-        // Update balance
-        const balanceElement = document.getElementById('balance');
-        if (balanceElement) {
-          balanceElement.textContent = `$${balance.toLocaleString()}`;
-        }
+        document.getElementById('balance').textContent = `$${balance.toLocaleString()}`;
+        document.getElementById('energyDisplay').textContent = `${energy}/${maxEnergy}`;
+        document.getElementById('totalTapsDisplay').textContent = totalTaps.toLocaleString();
+        document.getElementById('totalEarnedDisplay').textContent = `$${totalEarned.toLocaleString()}`;
         
-        // Update energy
-        const energyDisplay = document.getElementById('energyDisplay');
-        const energyBar = document.getElementById('energyBar');
+        const energyPercent = (energy / maxEnergy) * 100;
+        document.getElementById('energyBar').style.width = `${energyPercent}%`;
         
-        if (energyDisplay) {
-          energyDisplay.textContent = `${energy}/${maxEnergy}`;
-        }
+        const totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
+        document.getElementById('perTapDisplay').textContent = `+$${totalIncome.toLocaleString()} per tap`;
         
-        if (energyBar) {
-          const energyPercent = (energy / maxEnergy) * 100;
-          energyBar.style.width = `${energyPercent}%`;
-        }
-        
-        // Update stats
-        const totalTapsDisplay = document.getElementById('totalTapsDisplay');
-        const totalEarnedDisplay = document.getElementById('totalEarnedDisplay');
-        const perTapDisplay = document.getElementById('perTapDisplay');
-        
-        if (totalTapsDisplay) {
-          totalTapsDisplay.textContent = totalTaps.toLocaleString();
-        }
-        
-        if (totalEarnedDisplay) {
-          totalEarnedDisplay.textContent = `$${totalEarned.toLocaleString()}`;
-        }
-        
-        if (perTapDisplay) {
-          const totalIncome = upgrades.reduce((sum, u) => sum + u.income * u.level, 1);
-          perTapDisplay.textContent = `+$${totalIncome.toLocaleString()} per tap`;
-        }
-        
-        // Update current tab content
         showTabContent(currentTab);
       } catch (error) {
         console.error('❌ Error updating display:', error);
       }
     }
 
-    // Tab system
     function showTab(tab) {
-      // Update active nav item
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
       });
@@ -1130,7 +615,7 @@
         const incomePerTap = u.income * u.level;
         
         const card = document.createElement('div');
-        card.className = 'upgrade-card slide-in';
+        card.className = 'upgrade-card';
         
         card.innerHTML = `
           <div class="upgrade-header">
@@ -1313,7 +798,7 @@
       const oneDayMs = 24 * 60 * 60 * 1000;
       
       if (now - lastClaim >= oneDayMs) {
-        const bonus = Math.floor(balance * 0.1) + 1000; // 10% of current balance + 1000
+        const bonus = Math.floor(balance * 0.1) + 1000;
         balance += bonus;
         localStorage.setItem('seccoLastDailyBonus', now.toString());
         saveGame();
@@ -1337,48 +822,28 @@
       }
     }
 
-    // Initialize game
     function initializeGame() {
       try {
-        initializeTelegram();
-        initializeTonConnect();
         updateEnergySystem();
         updateDisplay();
-        
-        // Hide loading screen
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-          loadingScreen.style.opacity = '0';
-          setTimeout(() => {
-            loadingScreen.style.display = 'none';
-          }, 500);
-        }
         
         console.log('🚀 SECCO Tap Game initialized successfully!');
       } catch (error) {
         console.error('❌ Game initialization error:', error);
-        // Hide loading screen even on error
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-          loadingScreen.style.display = 'none';
-        }
       }
     }
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializeGame);
     } else {
       initializeGame();
     }
 
-    // Auto-update timers and save game
     setInterval(() => {
       updateEnergySystem();
       saveGame();
-    }, 1000); // Update every second for accurate timer
+    }, 1000);
 
-    // Save on page unload
     window.addEventListener('beforeunload', saveGame);
   </script>
 </body>

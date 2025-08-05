@@ -1,13 +1,12 @@
-"""
-SECCO Tap Game Telegram Bot
-Hamster Kombat style game for SECCO Network
-"""
-
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 import json
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Enable logging
 logging.basicConfig(
@@ -16,10 +15,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Bot configuration
-BOT_TOKEN = "8211591463:AAEa_gd1EfTycbLjX3QPIgebCwuMuxCojg8"  # Your SECCO Tap Bot token
-# Web App URL
-WEB_APP_URL = "https://dmitrycoinsec.github.io/secco-tap-game/"
+# Bot configuration - SECURE with environment variables
+BOT_TOKEN = os.getenv('BOT_TOKEN') or "YOUR_BOT_TOKEN_HERE"  # Use environment variable
+WEB_APP_URL = os.getenv('WEB_APP_URL') or "https://dmitrycoinsec.github.io/secco-tap-game/"
+
+# Validate configuration
+if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+    logger.error("⚠️ BOT_TOKEN not set! Please set BOT_TOKEN environment variable.")
+    exit(1)
 
 class SECCOTapBot:
     def __init__(self):
